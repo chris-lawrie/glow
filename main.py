@@ -4,28 +4,78 @@ import folium
 from streamlit_folium import st_folium
 import pandas as pd
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="glow")
 st.logo("images/glow_logo.png", size="large")
 st.title("glow")
-# st.subheader("Green Living through Optimized Weatherization")
 
-selected_state = st.selectbox("Select a State:", options=[None, 'NY', 'CA'])
+col1, col2 = st.columns([1, 2])
 
-data = {
-    'State': ['California', 'New York', 'Texas', 'Florida', 'Illinois'],
-    'City': ['Los Angeles', 'New York City', 'Houston', 'Miami', 'Chicago'],
-    'Latitude': [34.0522, 40.7128, 29.7604, 25.7617, 41.8781],
-    'Longitude': [-118.2437, -74.0060, -95.3698, -80.1918, -87.6298],
-    'Value': [100, 200, 150, 120, 180]  # Example column
-}
-df = pd.DataFrame(data)
+with col1:
+    region = st.selectbox(
+        "Select Region:",
+        options=[
+            None,
+            "Manhattan",
+            "Brooklyn",
+            "Queens",
+            "Staten Island",
+            "Bronx",
+        ],
+    )
 
-if selected_state is not None:
-    filtered_df = df[df['State'] == selected_state]
+with col2:
+    st.text("Select EE technologies:")
+    weather_stripping = st.checkbox("Weather Stripping")
+    insulation = st.checkbox("Insulation")
+    windows = st.checkbox("Windows")
+    appliances = st.checkbox("Appliances")
+    hvac = st.checkbox("HVAC")
 
-    # Display the filtered DataFrame as a table
-    st.write("### Data Table for", selected_state)
+# Initialize session state for button
+if "load_results" not in st.session_state:
+    st.session_state.load_results = False
+
+# Button logic with session state
+if st.button("Load Results"):
+    st.session_state.load_results = True
+
+if st.session_state.load_results:
+    # df = pd.read_csv(f"processed_data/{region}.csv")
+    # filtered_df = df[df['State'] == region]
+
+    filtered_df = pd.DataFrame(
+        data = {
+            "address": [
+                "123 Main St, Manhattan, NY",
+                "456 Park Ave, Brooklyn, NY",
+                "789 Queens Blvd, Queens, NY",
+                "101 Staten Ln, Staten Island, NY",
+                "202 Bronx Rd, Bronx, NY",
+                "303 Broadway, Manhattan, NY",
+                "404 Bedford Ave, Brooklyn, NY",
+                "505 Jamaica Ave, Queens, NY",
+            ] * 2,
+            "retrofit_cost": [15000, 12000, 18000, 9500, 11000, 16000, 12500, 14000] * 2,
+            "bill_savings": [1200, 950, 1500, 600, 800, 1400, 1000, 1100] * 2,
+            "kwh_savings": [10000, 8500, 12000, 5000, 7500, 11000, 9000, 9500] * 2,
+        }
+    )
+    filtered_df.set_index('address', inplace=True, drop=True)
+
+    results_col1, results_col2 = st.columns([1, 2])
+
+    with results_col1:
+        st.write("Top Candidates For", region)
+        st.dataframe(filtered_df)
+
+
+    with results_col2:
+        m = folium.Map(
+            location=[40.75502015474453, -73.9926955664234],
+            zoom_start=10,
+            tiles="cartodb positron",
+        )
+        st_folium(m, height=600, width=1000)
+
+    st.header("Avaliable EE funding programs:")
     st.dataframe(filtered_df)
-
-    m = folium.Map(location=[40.75502015474453, -73.9926955664234], zoom_start=10, tiles="cartodb positron")
-    st_folium(m, height=600, width=1000)
