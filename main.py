@@ -31,11 +31,10 @@ with col2:
     appliances = st.checkbox("Appliances")
     hvac = st.checkbox("HVAC")
 
-# Initialize session state for button
+# Initialize session state
 if "load_results" not in st.session_state:
     st.session_state.load_results = False
 
-# Button logic with session state
 if st.button("Load Results"):
     st.session_state.load_results = True
 
