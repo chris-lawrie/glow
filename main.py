@@ -78,11 +78,11 @@ with col1:
         label="",
         options=[
             None,
-            "Manhattan",
+            # "Manhattan",
             "Brooklyn",
-            "Queens",
-            "Staten Island",
-            "Bronx",
+            # "Queens",
+            # "Staten Island",
+            # "Bronx",
         ],
     )
 with col2:
