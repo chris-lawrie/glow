@@ -6,10 +6,18 @@ from streamlit_folium import st_folium
 from calculations import find_top_n_candidates
 from mapping_code import map_candidates
 
+BOROUGH_MAP = {
+    "Bronx":"bronx",
+    "Brooklyn":"brooklyn",
+    "Manhattan":"manhattan",
+    "Queens":"queens",
+    "Staten Island":"staten_island",
+}
 PROGRAM_DATA_COLS = ["Program", "Approx. Rebate Value", "Link"]
 RESULTS_DF_COLS = [
     "address"
 ]  # , "retrofit_cost", "bill_savings", "kwh_savings"]
+
 
 st.set_page_config(layout="wide", page_title="glow")
 st.logo("images/glow_logo.png", size="large")
@@ -26,11 +34,11 @@ with col1:
         label="",
         options=[
             None,
-            # "Manhattan",
+            "Bronx",
             "Brooklyn",
-            # "Queens",
-            # "Staten Island",
-            # "Bronx",
+            "Manhattan",
+            "Queens",
+            "Staten Island",
         ],
     )
 with col2:
@@ -54,9 +62,6 @@ if st.button("Load Results") and (region):
     st.session_state.load_results = True
 
 if st.session_state.load_results:
-    # df = pd.read_csv(f"data/{region}.csv")
-    # filtered_df = df[df['State'] == region]
-
     st.header(f"Avaliable EE funding programs for {region}")
     program_data = pd.DataFrame(pd.read_csv("data/ee_program_data/nyc.csv"))
     selected_technologies = []
@@ -88,7 +93,7 @@ if st.session_state.load_results:
         st.write("No eligible funding programs found")
 
     results_df = find_top_n_candidates(
-        df=pd.read_csv("data/building_data/brooklyn.csv"), n=100
+        df=pd.read_csv(f"data/building_data/{BOROUGH_MAP[region]}.csv"), n=500
     )
 
     results_col1, results_col2 = st.columns([1.4, 2])

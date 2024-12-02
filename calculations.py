@@ -1,9 +1,12 @@
 import pandas as pd
 
+# cap features to remove outliers
+# TODO: derive more rigourous caps based on feature distributions
+MIN_YEAR = 1880
+MAX_ASSET_TOT = 1e8
+MAX_BUILDING_AREA = 1e5
 
-YEAR_BUILT = "yearbuilt"
-ASSET_TOT = "assesstot"
-BUILDING_AREA = "bldgarea"
+
 
 
 def find_top_n_candidates(df: pd.DataFrame, n) -> pd.DataFrame:
@@ -22,18 +25,17 @@ def find_top_n_candidates(df: pd.DataFrame, n) -> pd.DataFrame:
         candidates: dataframe containing top N candidates
     """
     df_norm = df.copy(deep=True)
-    df_norm["yearbuilt_norm"] = (df[YEAR_BUILT].max() - df[YEAR_BUILT]) / (
-        df[YEAR_BUILT].max() - df[YEAR_BUILT].min()
-    )
-    df_norm["assesstot_norm"] = (df[ASSET_TOT] - df[ASSET_TOT].min()) / (
-        df[ASSET_TOT].max() - df[ASSET_TOT].min()
-    )
-    df_norm["bldgarea_norm"] = (
-        df[BUILDING_AREA] - df[BUILDING_AREA].min()
-    ) / (df[BUILDING_AREA].max() - df[BUILDING_AREA].min())
-    df_norm["score"] = df_norm[
-        ["yearbuilt_norm", "assesstot_norm", "bldgarea_norm"]
-    ].mean(axis=1)
-    return df.loc[
-        df_norm.sort_values(by="score", ascending=False).head(n).index
-    ]
+
+    df_norm['latest_year'] = df[['yearbuilt', 'yearalter1','yearalter2']].max(axis=1)
+    
+    # Clip to remove outliers
+    df_norm['yearbuilt_capped'] = df_norm['latest_year'].clip(lower=MIN_YEAR)
+    df_norm['assettot_capped'] = df_norm['assesstot'].clip(upper=MAX_ASSET_TOT)
+    df_norm['bldgarea_capped'] = df_norm['bldgarea'].clip(upper=MAX_BUILDING_AREA)
+    
+    # Normalize & calc score
+    df_norm["yearbuilt_norm"] = 1 - (df_norm['yearbuilt_capped'] - MIN_YEAR) / (df_norm['yearbuilt_capped'].max() - MIN_YEAR)
+    df_norm["assettot_norm"] = df_norm['assettot_capped'] / MAX_ASSET_TOT
+    df_norm["bldgarea_norm"] = df_norm['bldgarea_capped'] / MAX_BUILDING_AREA
+    df_norm["score"] = df_norm[["yearbuilt_norm", "assettot_norm", "bldgarea_norm"]].mean(axis=1)
+    return df.loc[df_norm.sort_values(by="score", ascending=False).head(n).index]
